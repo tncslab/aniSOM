@@ -2,17 +2,16 @@
 # run all the lorenz  python scriptfiles in the folder
 
 # create a manual progress-bar for the 9 items
-ZERO='[----------] (0/10)'
-ONE='[#---------] (1/10)'
-TWO='[##--------] (2/10)'
-THREE='[###-------] (3/10)'
-FOUR='[####------] (4/10)'
-FIVE='[#####-----] (5/10)'
-SIX='[######----] (6/10)'
-SEVEN='[#######---] (7/10)'
-EIGHT='[########--] (8/10)'
-NINE='[#########-] (9/10)'
-TEN='[###########] (10/10)'
+ZERO='[---------] (0/9)'
+ONE='[#--------] (1/9)'
+TWO='[##-------] (2/9)'
+THREE='[###------] (3/9)'
+FOUR='[####-----] (4/9)'
+FIVE='[#####----] (5/9)'
+SIX='[######---] (6/9)'
+SEVEN='[#######--] (7/9)'
+EIGHT='[########-] (8/9)'
+NINE='[#########] (9/9)'
 
 # define a function it has one arg that is a string and it is clearing the screen and echoing the string
 function pbar {
@@ -25,133 +24,75 @@ function pbar {
 
 # Run the files
 
-# ICA
+# PCA
 conda activate maco_rev1
-python gen_ica_res.py
+python 00_pca.py
 conda deactivate
 
 pbar $ONE
-echo "ICA done"
 
-# PCA
+
+# ICA
 conda activate maco_rev1
-python gen_pca_res.py
+python 01_ica.py
 conda deactivate
 
 pbar $TWO
-echo "ICA done"
-echo "PCA done"
+
 
 # CCA
 conda activate maco_rev1
-python gen_cca_res.py
+python 02_cca.py
 conda deactivate
 
 pbar $THREE
-echo "ICA done"
-echo "PCA done"
-echo "CCA done"
 
 # DCA
 conda activate dca
-python gen_dca_res.py
+python 03_dca.py
 conda deactivate
 
 pbar $FOUR
-echo "ICA done"
-echo "PCA done"
-echo "CCA done"
-echo "DCA done"
 
-# DCCA
-conda activate dcca_env
-python3 gen_dcca_res.py
+# sfa
+conda activate fsa2
+python 04_sfa.py
 conda deactivate
 
 pbar $FIVE
-echo "ICA done"
-echo "PCA done"
-echo "CCA done"
-echo "DCA done"
-echo "DCCA done"
+
+# DCCA
+conda activate dcca_env
+python3 05_dcca.py
+conda deactivate
+
+pbar $SIX
+
+# Random Control
+conda activate maco_rev1
+python 06_random.py
+conda deactivate
+
+pbar $SEVEN
 
 
 # Sh-Rec
 conda activate shrec
-python gen_shrec_res.py
+python 07_shrec.py
 conda deactivate
 
-pbar $SIX
-echo "ICA done"
-echo "PCA done"
-echo "CCA done"
-echo "DCA done"
-echo "DCCA done"
-echo "Sh-Rec done"
-
-
-# Random Control
-conda activate maco_rev1
-python gen_random_res.py
-conda deactivate
-
-pbar $SEVEN
-echo "ICA done"
-echo "PCA done"
-echo "CCA done"
-echo "DCA done"
-echo "DCCA done"
-echo "Sh-Rec done"
-echo "Random done"
-
-# sfa
-conda activate sfa
-python3 gen_sfa_res.py
-conda deactivate
 
 pbar $EIGHT
-echo "ICA done"
-echo "PCA done"
-echo "CCA done"
-echo "DCA done"
-echo "DCCA done"
-echo "Sh-Rec done"
-echo "Random done"
-echo "SFA done"
 
-# MaCo
-conda activate maco_rev1
-python gen_maco_res.py
-conda deactivate
-
-pbar $NINE
-echo "ICA done"
-echo "PCA done"
-echo "CCA done"
-echo "DCA done"
-echo "DCCA done"
-echo "Sh-Rec done"
-echo "Random done"
-echo "SFA done"
-echo "MaCo done"
 
 # AniSOM
 conda activate maco_rev1
-python gen_anisom_res.py
+python 08_anisom.py
 conda deactivate
 
-pbar $TEN
-echo "ICA done"
-echo "PCA done"
-echo "CCA done"
-echo "DCA done"
-echo "DCCA done"
-echo "Sh-Rec done"
-echo "Random done"
-echo "SFA done"
-echo "MaCo done"
-echo "AniSOM done"
+pbar $NINE
 
+# Combine the results
 conda activate maco_rev1
 python Z_combine_final_res.py
 conda deactivate

@@ -4,7 +4,7 @@ import numpy as np
 
 # data generation
 logmapgen_params = dict(N=50,  # number of realizations
-                        n=15_000,  # Length of time series
+                        n=60_000,  # Length of time series
                         rint=(3.8, 4.),  # interval to chose from the value of r parameter
                         A0=np.array([[0, 0, 0],
                                      [1, 0, 0],
@@ -24,6 +24,12 @@ figure_path = project_path / 'figures'
 train_split = 1. / 3
 valid_split = 1. / 3
 test_split = 1 - (train_split + valid_split)
+
+# lengths to test 1/3 * n = n_train
+ns = np.logspace(np.log10(300), 
+                 np.log10(60_000), 
+                 num=9, 
+                 endpoint=True).astype(int)
 
 # embedding params
 embedding_params = dict(dimension=3, 

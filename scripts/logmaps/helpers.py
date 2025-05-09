@@ -6,9 +6,18 @@ sys.path.append('../../')
 sys.path.append('../../../')
 from src.preprocessing.splitters import train_valid_test_split
 from src.preprocessing.tde import time_delay_embedding
+from src.savers import save_results
 
 from src.evaluate.evalz import comp_ccorr, get_maxes
 from config_logmapres import train_split, interim_res_path, valid_split
+
+from tqdm import tqdm
+
+import pickle
+import os
+
+from functools import partial
+from multiprocessing import Pool
 
 # optional imports that are needed only for specific methods
 try:
@@ -21,6 +30,26 @@ try:
 except:
     print("sklearn not installed")
 
+
+def normalize(x):
+    return (x - x.mean()) / x.std()
+    
+
+def aggregate_preds(zpred1 : np.ndarray, zpred2 : np.ndarray) -> np.ndarray:
+    """Aggregates two estimates of z by taking the mean.
+    But it can happen that the two estimates are anticorrelated, so the has to be normalized and oriented into the same direction.
+
+
+    """
+    # normalize time series
+    z1 = normalize(zpred1)
+    z2 = normalize(zpred2)
+
+    # check if orientation matches
+    if np.dot(z1.T, z2) < 0:
+        z2 = -z2
+
+    return (z1 + z2) / 2
 
 
 
@@ -84,14 +113,15 @@ def run_method(data, method, embedding_params, method_params, fit_params=None):
                 zpred = model.transform(D_test)
             
             elif method.__name__ in ['CCA']:
-                print(X_train.shape, Y_train.shape)
-                # exit()
                 model.fit(X_train, Y_train)
-                zpred, zpred2 = model.transform(X_test, Y_test)
+                zpred1, zpred2 = model.transform(X_test, Y_test)
+                zpred = aggregate_preds(zpred1, zpred2)
+
 
             elif method.__name__ == 'DCCA':
                 model.fit([X_train, Y_train])
-                zpred, zpred2 = model.transform([X_test, Y_test])
+                zpred1, zpred2 = model.transform([X_test, Y_test])
+                zpred = aggregate_preds(zpred1, zpred2)
 
             
 
@@ -126,3 +156,85 @@ def timeit(func):
         
         return result
     return wrapper
+
+
+def run_full_serial(rawdata_path, method, method_params, method_name, conf, fit_params=None):
+
+
+    # ectract parameters
+    N = conf.logmapgen_params['N']
+    embedding_params = conf.embedding_params
+    interim_res_path = conf.interim_res_path
+
+    # create folder if not exist
+    os.makedirs(interim_res_path, exist_ok=True)
+
+    # 1. Load raw data
+    with open(rawdata_path, 'rb') as f:
+        raw_dict = pickle.load(f)
+    raw_dataset, params = raw_dict['dataset'], raw_dict['params']
+
+
+    for n in tqdm(conf.ns):
+        dataset = [data[:n] for data in raw_dataset]
+
+        # 2. Run PCA
+        ms = []
+        ts = []
+        for i in tqdm(range(N)):
+            data = dataset[i]
+            m, t = run_method(
+                method=method,
+                data=data,
+                embedding_params=embedding_params,
+                method_params=method_params,
+                fit_params=fit_params)
+            ms.append(m)
+            ts.append(t)
+
+        # 3. save results
+        df = save_results(fname=interim_res_path / f'{method_name}_{n}_res.csv',
+                          r=ms,
+                          times=ts,
+                          N=N,
+                          n=n,
+                          method=method_name,
+                          dataset='logmap')
+
+def run_full_parallel(rawdata_path, method, method_params, method_name, conf, fit_params=None):
+    # ectract parameters
+    N = conf.logmapgen_params['N']
+    embedding_params = conf.embedding_params
+    interim_res_path = conf.interim_res_path
+
+    # create folder if not exist
+    os.makedirs(interim_res_path, exist_ok=True)
+
+    # 1. Load raw data
+    with open(rawdata_path, 'rb') as f:
+        raw_dict = pickle.load(f)
+    raw_dataset, params = raw_dict['dataset'], raw_dict['params']
+
+
+    for n in tqdm(conf.ns):
+        dataset = [data[:n] for data in raw_dataset]
+
+
+        runner = partial(run_method,
+                         method=method,
+                         embedding_params=embedding_params,
+                         method_params=method_params,
+                         fit_params=fit_params)
+        
+        with Pool(processes=os.cpu_count()) as pool:
+            tm = pool.map(runner, dataset)
+        ms, ts = zip(*tm)
+
+        # 3. save results
+        df = save_results(fname=interim_res_path / f'{method_name}_{n}_res.csv',
+                          r=ms,
+                          times=ts,
+                          N=N,
+                          n=n,
+                          method=method_name,
+                          dataset='logmap')
