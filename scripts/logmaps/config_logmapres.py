@@ -30,6 +30,10 @@ ns = np.logspace(np.log10(300),
                  np.log10(60_000), 
                  num=9, 
                  endpoint=True).astype(int)
+# ns = np.logspace(np.log10(300), 
+#                  np.log10(60_000), 
+#                  num=9, 
+#                  endpoint=True).astype(int)[:-3]  # [-3:]
 
 # embedding params
 embedding_params = dict(dimension=3, 
@@ -59,5 +63,16 @@ anisom_params = dict(
     fit_params = dict(epochs=1,
                       disable_tqdm=True)
                      )
+
+anisom_multiepoch_params = dict(
+    init_params=dict(space_dim=embedding_params['dimension'], 
+                     grid_dim=2, 
+                     sizes=[40, 20]),
+    fit_params = dict(epochs=None,
+                      disable_tqdm=True)
+                     )  # the number of epochs is determined in the script
+
+kpca_params = dict(kernel='rbf',
+                   n_components=1)  
                    
 

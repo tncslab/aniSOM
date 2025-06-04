@@ -99,7 +99,7 @@ def run_method(data, method, embedding_params, method_params, fit_params=None):
                 n_components = method_params['n_components']
             except:
                 n_components = 1
-            if method.__name__ in ['PCA', 'FastICA', 'DynamicalComponentsAnalysis', 'SFA']: 
+            if method.__name__ in ['PCA', 'FastICA', 'DynamicalComponentsAnalysis', 'SFA', "KernelPCA"]: 
                 D = np.concatenate([X_train, Y_train], axis=1)
                 D_test = np.concatenate([X_test, Y_test], axis=1)
 
@@ -218,6 +218,11 @@ def run_full_parallel(rawdata_path, method, method_params, method_name, conf, fi
 
     for n in tqdm(conf.ns):
         dataset = [data[:n] for data in raw_dataset]
+
+        # put in a conditional if the method is AniSOM class then set the number of epochs to be approximately the same
+        if method.__name__ == 'AniSOM':
+            fit_params['epochs'] = np.ceil(20_000 / (n * train_split) ).astype(int)
+            print("Set epochs to", fit_params['epochs'])
 
 
         runner = partial(run_method,

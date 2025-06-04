@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 import numpy as np
 from scipy.spatial  import cKDTree
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
-from src.preprocessing.tde import TimeDelayEmbeddingTransform
+from anisom.preprocessing.tde import TimeDelayEmbeddingTransform
 import matplotlib.pyplot as plt
 
 
@@ -31,6 +31,8 @@ class AniSOM(nn.Module):
         self.sigma1s = []
         self.sigma2s = []
         self.epss = []
+        self.score_history = []
+        self.validation_score_history = []
 
     def reset(self):
         self.gamma = 0
@@ -45,7 +47,7 @@ class AniSOM(nn.Module):
         return d
 
 
-    def fit(self, x, y, epochs=1, disable_tqdm=False):
+    def fit(self, x, y, epochs=1, disable_tqdm=False, x_valid=None):
         X = x
         Y = y
         N = x.shape[0]
@@ -91,6 +93,15 @@ class AniSOM(nn.Module):
                 self.sigma1s.append(sigma1)
                 self.sigma2s.append(sigma2)
                 self.epss.append(eps)
+
+                if s % 100 == 0:
+                    # compute the score
+                    score = self.compute_score(X)
+                    self.score_history.append(score)
+                    if x_valid is not None:
+                        validation_score = self.compute_score(x_valid)
+                        self.validation_score_history.append(validation_score)
+
             self.grid = G
 
         return self
@@ -108,3 +119,12 @@ class AniSOM(nn.Module):
         # print(a)
         ij_argmin = torch.cat([get_coords(activations[o]) for o in range(a)], axis=0)
         return ij_argmin
+    
+    def compute_score(self, X):
+        """ Compute the mean minimum of activation ona  bunch of samples X.
+        :param X: input samples
+        :return: mean minimum of activation 
+        """
+        return self.forward(X).min(axis=-1).values.min(axis=-1).values.mean()
+
+        

@@ -31,7 +31,8 @@ df.method = df.method.map({"RecurrenceManifold": "shRec",
                                "CCA": "CCA",
                                "PCA": "PCA",
                                "DCCA": "DCCA",
-                               "SFA": "SFA"})
+                               "SFA": "SFA",
+                               "KernelPCA": "KPCA",})
 
 
 df.to_csv(final_res_path / 'logmaps_res.csv')
