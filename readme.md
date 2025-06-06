@@ -58,4 +58,4 @@ model = AniSOM(space_dim=3, grid_dim=2, sizes=[40, 20])
 model.fit(X, Y, epochs=2)
 ```
 
-See the `examples/` folder for a more detailed examples.
+See the `examples/` folder for more detailed examples.
