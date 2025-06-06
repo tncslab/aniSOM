@@ -9,8 +9,18 @@ import matplotlib.pyplot as plt
 
 
 class AniSOM(nn.Module):
-    def __init__(self, space_dim, grid_dim, sizes):
-        """Anisotropic Self-Organizing Map BUT IT IS NOT WORKING YET!!!!!!!!!!1 ?????? What did I mean with that?
+    """
+    Anisotropic Self-Organizing Map (AniSOM).
+
+    This class implements an Anisotropic Self-Organizing Map, a type of neural network
+    that is trained using unsupervised learning to reconstruct the discretized state of 
+    shared driver dynamics from parallel samples of the affected systems.
+    The neighborhoods found in the Y variable are guiding the training of the SOM on the X variable, 
+    such that the own-dynamics and the hidden driver dynamics is disentangled on the resulting 2D grid.
+
+    """
+    def __init__(self, space_dim : int, grid_dim : int, sizes : list[int]):
+        """Anisotropic Self-Organizing Map
 
         :param space_dim: embedding space dimension
         :param grid_dim: 2D is supported
@@ -47,7 +57,17 @@ class AniSOM(nn.Module):
         return d
 
 
-    def fit(self, x, y, epochs=1, disable_tqdm=False, x_valid=None):
+    def fit(self, x : torch.Tensor, y : torch.Tensor, epochs : int=1, disable_tqdm : bool=False, x_valid : torch.Tensor=None) -> 'AniSOM':
+        """ Fit the model
+
+        :param torch.Tensor x: the embedded x time series data, this is the variable that goes into the predictor in the end
+        :param torch.Tensor y: the embedded y data, that guides the training through the neighborhoods
+        :param int epochs: number of full cycles of training (all data point skimmed through 1 cycle)
+        :param bool didable_tqdm: Not to show progress bar of the training
+        :param torch.Tensor x_valid: (optional) validation set embedded x time_series to calculate validation score during training
+        :return: self
+        :rtype: AniSOM
+        """
         X = x
         Y = y
         N = x.shape[0]
